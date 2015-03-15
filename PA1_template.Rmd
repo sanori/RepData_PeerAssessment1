@@ -7,19 +7,98 @@ output:
 
 
 ## Loading and preprocessing the data
-
-
+Simple is beautiful. Just load the data as `dataset`
+and prepare a function which converts interval number to actual time.
+```{r}
+dataset <- read.csv("activity.csv")
+interval2time <- function(x) {
+    strptime(sprintf("%02d:%02d", x%/%100, x%%100), format = "%H:%M")
+}
+```
 
 ## What is mean total number of steps taken per day?
+Sum the steps for each day and store the variable `dailySteps`.
+```{r}
+dailySteps <- tapply(dataset$steps, dataset$date, sum)
+hist(dailySteps, ylab = "Days")
+```
 
-
+The mean and median of daily steps are as follows.
+```{r}
+mean(dailySteps, na.rm = TRUE)
+median(dailySteps, na.rm = TRUE)
+```
 
 ## What is the average daily activity pattern?
 
-
+```{r}
+stepsPerInterval <- aggregate(steps ~ interval, data=dataset, mean)
+stepsPerInterval$timeOfDay <- interval2time(stepsPerInterval$interval)
+with(stepsPerInterval, plot(timeOfDay, steps,type = "l"))
+stepsPerInterval[which.max(stepsPerInterval$steps),]
+```
 
 ## Imputing missing values
+At first, Let's investigate the total number of missing values.
+```{r}
+table(factor(is.na(dataset$steps)))
+```
+There are 2304 missing values out of 17568 observations.
 
+Before devising a strategy to fill out missing values,
+Let's Look at the distribution of missing value(NA)s.
+The daily distribution of NA's are as follows.
+```{r}
+with(dataset, tapply(is.na(steps), date, sum))
+```
 
+As you can see, some days have no data.
+Since 288 NA's means all the 24 * 60 / 5 = 288 data are NA's,
+we cannot fill the NA as daily mean or median.
+
+Instead, we can fill the NA's with daily mean of each interval.
+Let's reuse the `stepsPerInterval` variable.
+```{r}
+names(stepsPerInterval)[2] <- "default"
+combo <- merge(dataset, stepsPerInterval)
+combo$steps[is.na(combo$steps)] <- combo$default[is.na(combo$steps)]
+combo$default <- NULL
+```
+
+After fill out the missing values,
+let's re-calculate the distribution of daily steps.
+```{r}
+dailyStepsFilled <- tapply(combo$steps, combo$date, sum)
+hist(dailyStepsFilled, ylab = "Days")
+mean(dailyStepsFilled, na.rm = TRUE)
+median(dailyStepsFilled, na.rm = TRUE)
+```
 
 ## Are there differences in activity patterns between weekdays and weekends?
+First, label the dates with weekday or weekend.
+```{r}
+date2daytype <- function(x) {
+    wd <- as.POSIXlt(x)$wday
+    if (wd == 0 | wd == 6) {
+        "weekend"
+    } else {
+        "weekday"
+    }
+}
+dataset$daytype <- sapply(dataset$date, date2daytype)
+```
+
+Take the average for each time interval by weekdays or weekends.
+```{r}
+stepsTrend <- aggregate(steps ~ daytype + interval,
+                        data = dataset, mean, na.rm=TRUE)
+stepsTrend$timeOfDay <- interval2time(stepsTrend$interval)
+```
+
+Draw the graph of the steps trend.
+```{r}
+library(ggplot2)
+qplot(timeOfDay, steps, data=stepsTrend, facets=daytype ~ ., geom='path')
+```
+
+As you can see, there are some differences between weekdays and weekends.
