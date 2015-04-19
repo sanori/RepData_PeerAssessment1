@@ -8,9 +8,16 @@ output:
 
 ## Loading and preprocessing the data
 Simple is beautiful. Just load the data as `dataset`
-and prepare a function which converts interval number to actual time.
 ```{r}
 dataset <- read.csv("activity.csv")
+```
+Prepare a function which converts interval number,
+which is consist of hour and minute digits to actual time.
+
+(Note: You may not use interval number as interger
+since the interval between interval number 1059 and 1100,
+which represent 10:59 and 11:00, is recognized as 41.)
+```{r}
 interval2time <- function(x) {
     strptime(sprintf("%02d:%02d", x%/%100, x%%100), format = "%H:%M")
 }

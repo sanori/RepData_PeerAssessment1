@@ -3,10 +3,18 @@
 
 ## Loading and preprocessing the data
 Simple is beautiful. Just load the data as `dataset`
-and prepare a function which converts interval number to actual time.
 
 ```r
 dataset <- read.csv("activity.csv")
+```
+Prepare a function which converts interval number,
+which is consist of hour and minute digits to actual time.
+
+(Note: You may not use interval number as interger
+since the interval between interval number 1059 and 1100,
+which represent 10:59 and 11:00, is recognized as 41.)
+
+```r
 interval2time <- function(x) {
     strptime(sprintf("%02d:%02d", x%/%100, x%%100), format = "%H:%M")
 }
@@ -20,7 +28,7 @@ dailySteps <- tapply(dataset$steps, dataset$date, sum)
 hist(dailySteps, ylab = "Days")
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-2-1.png) 
+![](PA1_template_files/figure-html/unnamed-chunk-3-1.png) 
 
 The mean and median of daily steps are as follows.
 
@@ -49,7 +57,7 @@ stepsPerInterval$timeOfDay <- interval2time(stepsPerInterval$interval)
 with(stepsPerInterval, plot(timeOfDay, steps,type = "l"))
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-4-1.png) 
+![](PA1_template_files/figure-html/unnamed-chunk-5-1.png) 
 
 ```r
 stepsPerInterval[which.max(stepsPerInterval$steps),]
@@ -57,7 +65,7 @@ stepsPerInterval[which.max(stepsPerInterval$steps),]
 
 ```
 ##     interval    steps           timeOfDay
-## 104      835 206.1698 2015-03-16 08:35:00
+## 104      835 206.1698 2015-04-20 08:35:00
 ```
 
 ## Imputing missing values
@@ -129,7 +137,7 @@ dailyStepsFilled <- tapply(combo$steps, combo$date, sum)
 hist(dailyStepsFilled, ylab = "Days")
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-8-1.png) 
+![](PA1_template_files/figure-html/unnamed-chunk-9-1.png) 
 
 ```r
 mean(dailyStepsFilled, na.rm = TRUE)
@@ -177,6 +185,6 @@ library(ggplot2)
 qplot(timeOfDay, steps, data=stepsTrend, facets=daytype ~ ., geom='path')
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-11-1.png) 
+![](PA1_template_files/figure-html/unnamed-chunk-12-1.png) 
 
 As you can see, there are some differences between weekdays and weekends.
